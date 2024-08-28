@@ -12,8 +12,8 @@ abstract class ApiManager{
   static const String _apiKey =   'f2fea3abff744e8f8892375133c1ceb0' ;
   static const String _endPointArticle = '/v2/everything';
 
-  static Future<SourceResponse> getSources () async{
-    Response serverRes = await get(Uri.parse('$_baseUrl$_endPoint?apiKey=$_apiKey'));
+  static Future<SourceResponse> getSources (String categoryId) async{
+    Response serverRes = await get(Uri.parse('$_baseUrl$_endPoint?apiKey=$_apiKey&category=$categoryId'));
 
     if(serverRes.statusCode >= 200 && serverRes.statusCode < 300){
       Map json = jsonDecode(serverRes.body) as Map;
@@ -35,7 +35,7 @@ abstract class ApiManager{
 
   }
 
-  static Future<SearchResponse> getSearch (String? q) async{
+  static Future<SearchResponse> getSearch (String q) async{
     Response serverRes = await get(Uri.parse('$_baseUrl$_endPointArticle?apiKey=$_apiKey&q=$q'));
     if(serverRes.statusCode >= 200 && serverRes.statusCode < 300){
       Map json = jsonDecode(serverRes.body) as Map;

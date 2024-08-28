@@ -1,14 +1,18 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:news/widgets/text_controller_arg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/api_manager.dart';
 import '../../data/models/search_response.dart';
+import '../../data/models/source_response.dart';
 import '../../widgets/error_widget.dart';
 import '../../widgets/loading_widget.dart';
 import 'package:timeago/timeago.dart' as timeAgo;
 
 class SearchList extends StatefulWidget {
+
   const SearchList({super.key });
+
   static const String routeName = 'search list' ;
 
   @override
@@ -17,10 +21,12 @@ class SearchList extends StatefulWidget {
 
 class _SearchListState extends State<SearchList> {
   bool isClicked = false ;
+
   @override
   Widget build(BuildContext context) {
     ModalRoute? modalRoute = ModalRoute.of(context);
     TextControllerArg arguments = modalRoute?.settings.arguments! as TextControllerArg;
+
       return FutureBuilder<SearchResponse>(
           future: ApiManager.getSearch(arguments.controller),
           builder: (context, snapshot) {
@@ -39,10 +45,10 @@ class _SearchListState extends State<SearchList> {
   Widget buildNewsList(List<Articles> list) {
     return ListView.builder(
         itemCount:list.length ,
-        itemBuilder: (context, index) => mapArticleToNewsWidget(list[index]));
+        itemBuilder: (context, index) => mapArticleToNewsWidget(context,list[index]));
   }
 
-  mapArticleToNewsWidget(Articles article) {
+  mapArticleToNewsWidget(BuildContext context,Articles article) {
     if(isClicked == false){
       return InkWell(
         onTap: (){
@@ -51,30 +57,38 @@ class _SearchListState extends State<SearchList> {
 
           });
         },
-        child: Column(
-          children: [
-            Image.network(article.urlToImage ?? ""),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(article.source?.name ?? "" ,
-                  style: TextStyle(fontSize: 15,color: Colors.grey),),
-                const SizedBox(width: 20,),
-              ],
-            ),
-            Text(article.title ?? "",
-              style: TextStyle(fontSize: 20,fontWeight:FontWeight.w600 ,color: Colors.black),),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const SizedBox(width: 200,),
-                Container(
-                    margin: const EdgeInsets.all(8),
-                    padding: const EdgeInsets.all(8),
-                    child: Text(formatTimeAgo(article.publishedAt ?? ""),style:  TextStyle(  color: Colors.grey))),
-              ],
-            ),
-          ],
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 13,vertical: 3),
+          child: Column(
+            children: [
+              CachedNetworkImage(
+                imageUrl: article.urlToImage ?? "",
+                placeholder: (context, url) => LoadingView(),
+                errorWidget: (context, url, error) => Icon(Icons.error),
+                height: MediaQuery.of(context).size.height * .25,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(article.source?.name ?? "" ,
+                    style: TextStyle(fontSize: 15,color: Colors.grey),),
+                  const SizedBox(width: 20,),
+                ],
+              ),
+              Text(article.title ?? "",
+                style: TextStyle(fontSize: 20,fontWeight:FontWeight.w600 ,color: Colors.black),),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(width: 200,),
+                  Container(
+                      margin: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(8),
+                      child: Text(formatTimeAgo(article.publishedAt ?? ""),style:  TextStyle(  color: Colors.grey))),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -86,44 +100,52 @@ class _SearchListState extends State<SearchList> {
 
           });
         },
-        child: Column(
-          children: [
-            Image.network(article.urlToImage ?? ""),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(article.source?.name ?? "",style: TextStyle(fontSize: 15,color: Colors.grey),),
-                const SizedBox(width: 20,),
-              ],
-            ),
-            Text(article.title ?? "",
-              style: TextStyle(fontSize: 20,fontWeight:FontWeight.w600 ,color: Colors.black),),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const SizedBox(width: 200,),
-                Container(
-                    margin: const EdgeInsets.all(8),
-                    padding: const EdgeInsets.all(8),
-                    child: Text(formatTimeAgo(article.publishedAt ?? "",),style:  TextStyle(  color: Colors.grey),)),
-              ],
-            ),
-            Text(article.content ?? ""),
-            Row(
-              children: [
-                const SizedBox(width: 200,),
-                Container(
-                  margin: const EdgeInsets.all(10),
-                  padding: const EdgeInsets.all(10),
-                  child: InkWell(
-                      onTap: (){
-                        launchURL(article.url?? "");
-                      },
-                      child: const Text('View Full Article',style: TextStyle(fontWeight: FontWeight.w700),)),
-                ),
-              ],
-            )
-          ],
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 13,vertical: 3),
+          child: Column(
+            children: [
+              CachedNetworkImage(
+                imageUrl: article.urlToImage ?? "",
+                placeholder: (context, url) => LoadingView(),
+                errorWidget: (context, url, error) => Icon(Icons.error),
+                height: MediaQuery.of(context).size.height * .25,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(article.source?.name ?? "",style: TextStyle(fontSize: 15,color: Colors.grey),),
+                  const SizedBox(width: 20,),
+                ],
+              ),
+              Text(article.title ?? "",
+                style: TextStyle(fontSize: 20,fontWeight:FontWeight.w600 ,color: Colors.black),),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(width: 200,),
+                  Container(
+                      margin: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(8),
+                      child: Text(formatTimeAgo(article.publishedAt ?? "",),style:  TextStyle(  color: Colors.grey),)),
+                ],
+              ),
+              Text(article.content ?? ""),
+              Row(
+                children: [
+                  const SizedBox(width: 200,),
+                  Container(
+                    margin: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(10),
+                    child: InkWell(
+                        onTap: (){
+                          launchURL(article.url?? "");
+                        },
+                        child: const Text('View Full Article',style: TextStyle(fontWeight: FontWeight.w700),)),
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       );
     }

@@ -1,37 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:news/screens/tabs/tab_view_model.dart';
+import 'package:provider/provider.dart';
 import '../../data/api_manager.dart';
+import '../../data/base.dart';
+import '../../data/models/article_response.dart';
 import '../../data/models/source_response.dart';
 import '../../widgets/error_widget.dart';
 import '../../widgets/loading_widget.dart';
 import 'news_list.dart';
 
 
+
 class TabsList extends StatefulWidget {
-  const TabsList({super.key});
+  final String categoryId;
+
+  const TabsList(this.categoryId, {super.key});
 
   @override
   State<TabsList> createState() => _TabsListState();
 }
 
 class _TabsListState extends State<TabsList> {
+  TabsViewModel viewModel = TabsViewModel();
   int selectedTabIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    viewModel.getSources(widget.categoryId);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return FutureBuilder<SourceResponse>(
-        future: ApiManager.getSources(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return ErrorView(error: snapshot.error.toString(), onRetryClick: (){});
-          } else if (snapshot.hasData) {
-            return Container(
-              margin: const EdgeInsets.all(12),
-                padding: const EdgeInsets.all(15),
-                child: buildTabsList(snapshot.data!.sources!));
-          } else {
-            return const LoadingView();
-          }
-        });
+    return ChangeNotifierProvider(
+      create: (_) => viewModel,
+      builder: (context, _) {
+        viewModel = Provider.of(context);
+        if (viewModel.sourcesApiState is BaseLoadingState) {
+          return const LoadingView();
+        } else if (viewModel.sourcesApiState is BaseErrorState) {
+          String errorMessage =
+              (viewModel.sourcesApiState as BaseErrorState).errorMessage;
+          return ErrorView(error: errorMessage, onRetryClick: () {});
+        } else {
+          List<Sources> sources =
+              (viewModel.sourcesApiState as BaseSuccessState<List<Sources>>)
+                  .data;
+          return buildTabsList(sources);
+        }
+      },
+    );
+
   }
 
   Widget buildTabsList(List<Sources> sources) {
@@ -47,7 +66,7 @@ class _TabsListState extends State<TabsList> {
       child: Column(
         children: [
           const SizedBox(
-            height: 1,
+            height: 8,
           ),
           TabBar(
             tabs: tabs,
@@ -64,10 +83,8 @@ class _TabsListState extends State<TabsList> {
     );
   }
 
-
   Widget mapSourceToTab(Sources source, bool isSelected) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
