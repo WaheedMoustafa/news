@@ -1,12 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/api_manager.dart';
+import '../../data/base.dart';
 import '../../data/models/article_response.dart';
 import '../../data/models/source_response.dart';
 import '../../widgets/error_widget.dart';
 import '../../widgets/loading_widget.dart';
 import 'package:timeago/timeago.dart' as timeago;
+
+import 'news_view_model.dart';
 
 
 class NewsList extends StatefulWidget {
@@ -19,22 +23,46 @@ class NewsList extends StatefulWidget {
 }
 
 class _NewsListState extends State<NewsList> {
+  NewsViewModel newsViewModel = NewsViewModel() ;
   bool isClicked = false ;
+  int page = 1 ;
+
+  @override
+  void initState() {
+    super.initState();
+    newsViewModel.getArticles(widget.source.id!,page);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<ArticleResponse>(
-        future: ApiManager.getArticles(widget.source.id!),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return ErrorView(
-                error: snapshot.error.toString(), onRetryClick: () {});
-          } else if (snapshot.hasData) {
-            return buildNewsList(snapshot.data!.articles!);
-          } else {
-            return LoadingView();
-          }
-        });
+    return ChangeNotifierProvider(
+        create: (_) => newsViewModel,
+    builder: (context, _) {
+    newsViewModel = Provider.of(context);
+    if (newsViewModel.articlesApiState is BaseLoadingState) {
+    return const LoadingView();
+    } else if (newsViewModel.articlesApiState is BaseErrorState) {
+    String errorMessage =
+    (newsViewModel.articlesApiState as BaseErrorState).errorMessage;
+    return ErrorView(error: errorMessage, onRetryClick: () {});
+    } else{
+      List<Articles> sources =
+          (newsViewModel.articlesApiState as BaseSuccessState<List<Articles>>)
+              .data;
+      return NotificationListener<ScrollNotification>(
+          onNotification: (notification){
+            if(notification.metrics.pixels == notification.metrics.maxScrollExtent){
+              newsViewModel.getArticles(widget.source.id!, page , fromLoad: true);
+              page++;
+
+            }
+            return true ;
+          },
+          child: buildNewsList(sources));
+    }
+    }
+    );
+
   }
 
   Widget buildNewsList(List<Articles> list) {

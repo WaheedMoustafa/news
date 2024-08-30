@@ -24,8 +24,8 @@ abstract class ApiManager{
 
   }
 
-  static Future<ArticleResponse> getArticles (String sourceId) async{
-    Response serverRes = await get(Uri.parse('$_baseUrl$_endPointArticle?apiKey=$_apiKey&sources=$sourceId'));
+  static Future<ArticleResponse> getArticles (String sourceId, int page) async{
+    Response serverRes = await get(Uri.parse('$_baseUrl$_endPointArticle?apiKey=$_apiKey&sources=$sourceId&page=$page&pageSize=10'));
     if(serverRes.statusCode >= 200 && serverRes.statusCode < 300){
       Map json = jsonDecode(serverRes.body) as Map;
       return ArticleResponse.fromJson(json);

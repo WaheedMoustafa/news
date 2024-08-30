@@ -1,8 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:news/screens/tabs/search_view_model.dart';
 import 'package:news/widgets/text_controller_arg.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/api_manager.dart';
+import '../../data/base.dart';
 import '../../data/models/search_response.dart';
 import '../../data/models/source_response.dart';
 import '../../widgets/error_widget.dart';
@@ -21,24 +24,51 @@ class SearchList extends StatefulWidget {
 
 class _SearchListState extends State<SearchList> {
   bool isClicked = false ;
+  SearchViewModel searchViewModel = SearchViewModel() ;
+
+  @override
+  void initState() {
+    super.initState();
+    ModalRoute? modalRoute = ModalRoute.of(context);
+    TextControllerArg arguments = modalRoute?.settings.arguments! as TextControllerArg;
+    searchViewModel.getSearch(arguments.controller);
+  }
 
   @override
   Widget build(BuildContext context) {
-    ModalRoute? modalRoute = ModalRoute.of(context);
-    TextControllerArg arguments = modalRoute?.settings.arguments! as TextControllerArg;
 
-      return FutureBuilder<SearchResponse>(
-          future: ApiManager.getSearch(arguments.controller),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return ErrorView(
-                  error: snapshot.error.toString(), onRetryClick: () {});
-            } else if (snapshot.hasData) {
-              return buildNewsList(snapshot.data!.articles!);
-            } else {
-              return const LoadingView();
-            }
-          });
+
+    return ChangeNotifierProvider(
+        create: (_) => searchViewModel,
+        builder: (context, _) {
+          searchViewModel = Provider.of(context);
+          if (searchViewModel.articlesApiState is BaseLoadingState) {
+            return const LoadingView();
+          } else if (searchViewModel.articlesApiState is BaseErrorState) {
+            String errorMessage =
+                (searchViewModel.articlesApiState as BaseErrorState).errorMessage;
+            return ErrorView(error: errorMessage, onRetryClick: () {});
+          } else{
+            List<Articles> sources =
+                (searchViewModel.articlesApiState as BaseSuccessState<List<Articles>>)
+                    .data;
+            return buildNewsList(sources);
+          }
+        }
+    );
+
+   //   return FutureBuilder<SearchResponse>(
+   //       future: ApiManager.getSearch(arguments.controller),
+   //       builder: (context, snapshot) {
+   //         if (snapshot.hasError) {
+   //           return ErrorView(
+   //               error: snapshot.error.toString(), onRetryClick: () {});
+   //         } else if (snapshot.hasData) {
+   //           return buildNewsList(snapshot.data!.articles!);
+   //         } else {
+   //           return const LoadingView();
+   //         }
+   //       });
     }
 
 
