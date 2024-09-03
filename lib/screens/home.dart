@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:news/data/api_manager.dart';
 import 'package:news/screens/tabs/category/category_list.dart';
-import 'package:news/screens/tabs/search_list.dart';
+import 'package:news/screens/tabs/search_view.dart';
 import 'package:news/screens/tabs/settings.dart';
 import 'package:news/screens/tabs/tabs_list.dart';
 import '../data/models/category.dart';
@@ -45,7 +45,7 @@ class _HomeState extends State<Home> {
         child: Scaffold(
           appBar: PreferredSize(
               preferredSize: const Size.fromHeight(67),
-              child: isSearch ?   buildSearchAppBar() :buildAppBar()
+              child: buildAppBar()
           ),
           body: currentWidgetBody,
           drawer: buildDrawer(),
@@ -128,7 +128,7 @@ class _HomeState extends State<Home> {
           margin: const EdgeInsets.symmetric(horizontal: 25),
           child: InkWell(
               onTap: (){
-                isSearch = true ;
+                Navigator.pushNamed(context, SearchView.routeName);
                 setState(() {});
               },
               child: const Icon(Icons.search , color: Colors.white,size: 40,)),
@@ -162,7 +162,7 @@ class _HomeState extends State<Home> {
             });},),
           suffixIcon: InkWell(child: const Icon(Icons.search , color: Color(0xff39A552),) ,
               onTap: (){
-                Navigator.pushReplacementNamed(context, SearchList.routeName , arguments: TextControllerArg(searchController.text.trim()));}),
+                Navigator.pushReplacementNamed(context, SearchView.routeName );}),
         ),
 
       ),
